@@ -1,3 +1,3 @@
 # RubidiumProfile
 ## Introduction
-This fioder containe all the data for rubidium
+This folder containe all the data for rubidium
