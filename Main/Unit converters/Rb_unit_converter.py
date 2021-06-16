@@ -39,5 +39,4 @@ def temp2velocity(T):
     :param T: temperature (K)
     :return: most probable velocity (m/s)
     '''
-    pass
-
+    return 1
