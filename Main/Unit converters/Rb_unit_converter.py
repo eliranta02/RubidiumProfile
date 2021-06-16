@@ -1,4 +1,5 @@
 from __future__ import division, print_function
+from Main.Constants.Rb_constants import *
 from numpy import *
 from scipy.constants import k
 
@@ -8,10 +9,6 @@ def p(T):
     :param T: temperature [k]
     :return: the pressure of atomic media
     '''
-    pa = -94.04826
-    pb = 1961.258
-    pc = -0.03771687
-    pd = 42.57526
     ret_val = 10**(pa - pb/T + pc*T + pd*log10(T))
     return ret_val
 
@@ -39,4 +36,12 @@ def temp2velocity(T):
     :param T: temperature (K)
     :return: most probable velocity (m/s)
     '''
-    return 1
+    ret_val = sqrt(2 * k * T / m)
+    return ret_val
+
+'''
+from Global_unit_converter import *
+T = celsius2kelvin(25)
+print(temp2velocity(T))
+'''
+

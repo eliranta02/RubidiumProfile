@@ -1,3 +1,36 @@
 from __future__ import division, print_function
+from scipy.constants import atomic_mass, c
+from numpy import pi
 
-a = 1
+D_line = 'D2'
+
+# pressure atomic vapor constants
+pa = -94.04826
+pb = 1961.258
+pc = -0.03771687
+pd = 42.57526
+
+#mass of the rubidium
+#Rubidium 85
+mRb85 = 85 * atomic_mass
+
+#Rubidium 87
+mRb85 = 87 * atomic_mass
+
+#mass uses for the entire simulation
+m = mRb85
+
+# wavelength and wavevector
+# D2 line
+
+if D_line == 'D2':
+    wavelen = 780e-9
+    gamma = 2 * pi * 6.06e6 # [MHz]
+elif D_line == 'D1':
+    wavelen = 795e-9
+    gamma = 2 * pi * 5.75e6  # [MHz]
+
+
+k = 2 * pi / wavelen
+frequency = k/ c
+
