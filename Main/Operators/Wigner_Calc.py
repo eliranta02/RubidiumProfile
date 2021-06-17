@@ -3,7 +3,7 @@ from scipy import floor, sqrt
 from numpy import arange
 from math import *
 
-DEBUG_MODE=0
+DEBUG_MODE = 0
 
 def Wigner3j(j1,j2,j3,m1,m2,m3):
 #======================================================================
