@@ -1,7 +1,9 @@
 from __future__ import division, print_function
 from scipy.constants import atomic_mass, c
-from Global_constants import S
+#from Global_constants import S
 from numpy import pi
+
+S = 1/2
 
 D_line = 'D2'
 
@@ -46,4 +48,3 @@ elif D_line == 'D1':
 
 k = 2 * pi / wavelen
 frequency = k/ c
-

@@ -1,14 +1,13 @@
 from __future__ import division,print_function
 from numpy import zeros,transpose,tensordot
 from Main.Constants.Rb_constants import S
+
 class State:
-
-
-    def __init__(self,levels_number,key,F=0,mF=0,L=0,gF=0,is_Ground = False):
+    def __init__(self,total_levels_number,key,F=0,mF=0,L=0,gF=0,is_Ground = False):
         '''
         Parameters
         ----------
-        levels_number : how many levels total in your system in order to define the vector size
+        total_levels_number : how many levels total in your system in order to define the vector size
         key - unique value of the state (default the state number)
         F - F number of the state
         mF - qunatum number of F
@@ -16,13 +15,13 @@ class State:
         gF -
         is_Ground - boolean if it is the ground state or not
         '''
-        self.level = zeros((levels_number, 1 ))
+        self.level = zeros((total_levels_number, 1 ))
         self.L = L
         self.F = F
         self.mF = mF
         self.gF = gF
         self.is_Ground = is_Ground
-        if 0 <= key < levels_number:
+        if 0 <= key < total_levels_number:
             self.level[key] = 1
 
     def set_S(self,S):
