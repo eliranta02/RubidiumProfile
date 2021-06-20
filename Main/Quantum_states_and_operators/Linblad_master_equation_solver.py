@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 
-from numpy import zeros, transpose, kron, sqrt, asarray
+from numpy import zeros, transpose, kron, sqrt, dot, array
 from numpy.linalg import solve
 from pylab import eig,mat,inv,exp,diag
 from scipy.integrate import ode
@@ -34,7 +34,7 @@ class Linblad_Solver(object):
         A = solve(matrix, res)
         return A
 
-    def odeSolverWithParam(self,jac,userSupply,param):
+    def odeSolverWithParam(self,jac, userSupply, param):
         # initate state
         t0 = 0
         points = param[0]
@@ -54,20 +54,19 @@ class Linblad_Solver(object):
                 H = t_scan - r.t
             r.integrate(r.t + H)
             x.append(r.t)
-            #print(loc)
             a = (r.y).reshape(1, len(r.y))
             y.append(a[0])
             loc += 1
 
         return x, y
 
-    def odeSolver(self,y0,time,returnDic):
+    def odeSolver(self,y0,time_arr,returnDic):
         '''
 
         Parameters
         ----------
         y0 : y0 = zeros((N,)) ; y0[1] = 1
-        time : the time parameter
+        time : runing integration parameters (e.g. time parameter)
         returnDic : all the return values
 
         Returns
@@ -75,13 +74,12 @@ class Linblad_Solver(object):
         returnDic
         '''
         dtloop = 0
-        for idx, t in enumerate(time):
-            print(dtloop)
+        for idx, t in enumerate(time_arr):
+            #print(dtloop)
             eval,evec = eig(self.matrix)
-            solT = asarray(evec * mat(diag(exp(eval * t))) * inv(evec)) * y0.transpose()
-            for key in returnDic:
-                val = list(map(int, key.split(",")))
-                returnDic[key].append(solT[val[0]][val[1]])
+            solT = dot((evec * (diag(exp(eval * t))) * inv(evec)), y0.transpose())
+            for idx1, key in enumerate(returnDic):
+                returnDic[key].append(solT[idx1])
 
             dtloop += 1
 
@@ -107,14 +105,13 @@ class Linblad_Solver(object):
 
 
 
-'''def jac(t,y,param):
+def jac(t,y,param):
     delta = param[0] * t
     retVal=buildRhoMatrix(delta)
     return retVal
 
 
 def userSupply(t,y,param):
-
     delta = param[0] * t
     rhoDot = buildRhoMatrix(delta)
     N = len(rhoDot[0])
@@ -147,7 +144,7 @@ x,y = a.odeSolverWithParam(jac,userSupply,param)
 
 print(x)
 print('*'*20)
-print(y)'''
+print(y)
 
 
 '''
@@ -161,11 +158,12 @@ def buildRhoMatrix(d):
     return mat
 
 
-a = Linblad_Solver(buildRhoMatrix(1))
+a = Linblad_Solver()
+a.matrix = buildRhoMatrix(1)
 y0 = zeros((4,))
 y0[1] = 1
 
-time = linspace(0, 100, 100)
+time_arr = linspace(0, 100, 1000)
 
 
 from pylab import *
@@ -174,12 +172,14 @@ myDict = {}
 myDict['1,1'] = []
 myDict['1,0'] = []
 
-myDict = a.odeSolver(y0,time,myDict)
+myDict = a.odeSolver(y0,time_arr,myDict)
 
-plot(time,myDict['1,1'])
-show()'''
+plot(time_arr,real(myDict['1,1']))
+plot(time_arr,real(myDict['1,0']))
+show()
+'''
 
-
+'''
 from numpy import array, dot
 
 def buildRhoMatrix(d):
@@ -205,3 +205,5 @@ c = transpose(cc)
 
 
 print(dot(c,cc))
+
+'''
