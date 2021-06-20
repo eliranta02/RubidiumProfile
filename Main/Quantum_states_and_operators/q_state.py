@@ -100,3 +100,7 @@ class State:
         else:
             print('Multiply must be between to states')
         return ret_val
+
+
+a1 = State(2,0,1,0,0,0,True)
+a2 = State(2,1,2,0,0,0,True)
