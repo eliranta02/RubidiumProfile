@@ -5,23 +5,21 @@ from numpy.linalg import solve
 from pylab import eig,mat,inv,exp,diag
 from scipy.integrate import ode
 
+import concurrent.futures
+import time
 
 #from abc import ABCMeta, abstractmethod
 
-class Linblad_Solver(object):
+class ode_time_dependent_solver(object):
 
-
-    def __init__(self):
-        self._matrix = 0
-
-    def solveSteadyState(self):
+    def solveSteadyState(self,matrix):
         '''
 
         Returns
         ------
         the solution of steady state solution
         '''
-        matrix = self.matrix
+
         N = len(matrix[0])
         vec = zeros((N, ))
         for i in range(int(sqrt(N))):
@@ -60,7 +58,7 @@ class Linblad_Solver(object):
 
         return x, y
 
-    def odeSolver(self,y0,time_arr,returnDic):
+    def odeSolver(self,matrix,y0,time_val,returnDic):
         '''
 
         Parameters
@@ -73,26 +71,13 @@ class Linblad_Solver(object):
         -------
         returnDic
         '''
-        dtloop = 0
-        for idx, t in enumerate(time_arr):
-            #print(dtloop)
-            eval,evec = eig(self.matrix)
-            solT = dot((evec * (diag(exp(eval * t))) * inv(evec)), y0.transpose())
-            for idx1, key in enumerate(returnDic):
-                returnDic[key].append(solT[idx1])
 
-            dtloop += 1
+        eval, evec = eig(matrix)
+        solT = dot((evec * (diag(exp(eval * time_val))) * inv(evec)), y0.transpose())
+        for idx1, key in enumerate(returnDic):
+            returnDic[key].append(solT[idx1])
 
         return returnDic
-
-    @property
-    def matrix(self):
-        return self._matrix
-
-    @matrix.setter
-    def matrix(self,temp):
-        self._matrix = temp
-
 
     @staticmethod
     def print_info():
@@ -104,7 +89,37 @@ class Linblad_Solver(object):
 
 
 
+class Linblad_master_equation_solver(ode_time_dependent_solver):
 
+    def __init__(self, enable_multiprocessing):
+        self.is_multi_processing_enabled = enable_multiprocessing
+
+    def solve_master_equation_without_Doppler_effect(self, matrix_func,param_of_matrix,detuning,y0,returnDic):
+
+        location = 1
+        for det_idx, det in detuning:
+            param_of_matrix[location] = det
+            A = matrix_func(param_of_matrix)
+            time_val = 5
+            super().odeSolver(A, y0, time_val, returnDic)
+
+        if self.is_multi_processing_enabled == True:
+            pass
+        else:
+            pass
+
+        pass
+
+    def solve_master_equation_with_Doppler_effect(self, state):
+
+        if self.is_multi_processing_enabled == True:
+            pass
+        else:
+            pass
+
+        pass
+
+'''
 def jac(t,y,param):
     delta = param[0] * t
     retVal=buildRhoMatrix(delta)
@@ -146,6 +161,8 @@ print(x)
 print('*'*20)
 print(y)
 
+
+'''
 
 '''
 from numpy import array, linspace
