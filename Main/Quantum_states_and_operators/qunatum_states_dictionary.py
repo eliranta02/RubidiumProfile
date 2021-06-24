@@ -1,6 +1,7 @@
 "Bulid all the density matrix states"
 
 class rhoMatrixNames:
+
     def __init__(self,N):
         self.N = N
         self.rho = {}
@@ -13,7 +14,6 @@ class rhoMatrixNames:
 
     def getLocationByName(self,rho_name):
         return self.rho[rho_name]
-
 
     @staticmethod
     def getStatesNames(N):
@@ -40,13 +40,15 @@ class rhoMatrixNames:
     def __str__(self):
         txt = ''
         for i in range(self.N):
-            for j in range(self.N-1):
-                txt +='rho'+str(i+1)+str(j+1)+', '
+            for idx, j in enumerate(range(self.N-1)):
+                txt +='rho'+str(i+1)+str(j+1)+'| '
             txt += 'rho' + str(i + 1) + str(j + 2)
             txt += '\n'
+            txt += 30 * '-'
+            txt += '\n' 
         return txt
 
 
-a = rhoMatrixNames(2)
+a = rhoMatrixNames(3)
 val = a.getLocationByName(a.buildRhoName(2, 2))
-print(val)
+print(a)
