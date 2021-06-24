@@ -8,6 +8,8 @@ from scipy.integrate import ode
 import concurrent.futures
 import time
 
+from build_bloch_equation_matrix import *
+
 #from abc import ABCMeta, abstractmethod
 
 class ode_time_dependent_solver(object):
@@ -99,7 +101,7 @@ class Linblad_master_equation_solver(ode_time_dependent_solver):
         location = 1
         for det_idx, det in detuning:
             param_of_matrix[location] = det
-            A = matrix_func(param_of_matrix)
+            A = buildRhoMatrix(matrix_func(param_of_matrix))
             time_val = 5
             super().odeSolver(A, y0, time_val, returnDic)
 

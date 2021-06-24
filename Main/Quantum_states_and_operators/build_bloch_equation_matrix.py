@@ -11,6 +11,6 @@ def buildRhoMatrix(H, N, L):
     '''
     Hrho = kron(H, eye(N))
     rhoH = kron(eye(N), transpose(H))
-    ret_val = -1j * (Hrho - rhoH)  + L
+    ret_val = -1j * (Hrho - rhoH) + L
     return ret_val
 
