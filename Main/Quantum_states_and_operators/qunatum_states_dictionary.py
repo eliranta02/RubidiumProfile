@@ -32,11 +32,6 @@ class rhoMatrixNames:
         return ret_val
 
 
-    @staticmethod
-    def buildRhoString(i, j):
-        retVal = 'rho' + str(i) + str(j)
-        return retVal
-
     def __str__(self):
         txt = ''
         for i in range(self.N):
@@ -48,7 +43,3 @@ class rhoMatrixNames:
             txt += '\n' 
         return txt
 
-
-a = rhoMatrixNames(3)
-val = a.getLocationByName(a.buildRhoName(2, 2))
-print(a)

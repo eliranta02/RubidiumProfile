@@ -1,14 +1,13 @@
 from __future__ import division, print_function
 
-from numpy import zeros, transpose, kron, sqrt, dot, array
+from numpy import zeros, transpose, kron, sqrt, dot, array, linspace
 from numpy.linalg import solve
 from pylab import eig,mat,inv,exp,diag
 from scipy.integrate import ode
 
 import concurrent.futures
 import time
-
-from build_bloch_equation_matrix import *
+import functools
 
 #from abc import ABCMeta, abstractmethod
 
@@ -61,12 +60,13 @@ class ode_time_dependent_solver(object):
         return x, y
 
     def odeSolver(self,matrix,y0,time_val,returnDic):
+
         '''
 
         Parameters
         ----------
         y0 : y0 = zeros((N,)) ; y0[1] = 1
-        time : runing integration parameters (e.g. time parameter)
+        time_val: runing integration parameters (e.g. time parameter)
         returnDic : all the return values
 
         Returns
@@ -89,28 +89,36 @@ class ode_time_dependent_solver(object):
         N = len(self.matrix)
         return 'The number of levels : {} \nThe '.format(int(sqrt(N)))
 
-
-
 class Linblad_master_equation_solver(ode_time_dependent_solver):
 
     def __init__(self, enable_multiprocessing):
         self.is_multi_processing_enabled = enable_multiprocessing
 
-    def solve_master_equation_without_Doppler_effect(self, matrix_func,param_of_matrix,detuning,y0,returnDic):
 
-        location = 1
-        for det_idx, det in detuning:
-            param_of_matrix[location] = det
-            A = buildRhoMatrix(matrix_func(param_of_matrix))
-            time_val = 5
-            super().odeSolver(A, y0, time_val, returnDic)
+
+    def solve_master_equation_without_Doppler_effect(self, callback, detuning_param, y0, returnDic):
+        '''
+
+        :param callback:
+        :param detuning_param:
+        :param y0: initial vector  y0 = zeros((N,)) ; y0[1] = 1
+        :param returnDic:
+        :return:
+        '''
+        mat_solver = [callback(param) for param in detuning_param]
 
         if self.is_multi_processing_enabled == True:
-            pass
+            with concurrent.futures.ProcessPoolExecutor() as executor:
+                time_val = 5
+                results = executor.map(functools.partial(self.odeSolver, y0=y0, time_val = time_val, returnDic = returnDic), mat_solver)
         else:
-            pass
+            time_val = 5
+            results = map(functools.partial(self.odeSolver, y0=y0, time_val = time_val, returnDic = returnDic), mat_solver)
 
-        pass
+        temp_list = list(results)
+        ret_val = temp_list[len(temp_list) - 1]
+
+        return ret_val
 
     def solve_master_equation_with_Doppler_effect(self, state):
 
@@ -224,5 +232,31 @@ c = transpose(cc)
 
 
 print(dot(c,cc))
+'''
+'''
+if __name__ == '__main__':
+    start = time.perf_counter()
+    N = 4
+    def callback(d):
+        mat = array([[1,0,d,d], \
+                     [0,2,3,d], \
+                     [d,3,2,0], \
+                     [0,0,0,d]])
+        return mat
+
+    y0 = zeros((N,)) ; y0[1] = 1
+
+    temp = Linblad_master_equation_solver(False)
+
+    returnDic = {'1' : [], '2': []}
+
+    running_param = linspace(1,106,10000)
+
+    results = temp.solve_master_equation_without_Doppler_effect(callback, running_param,y0,returnDic)
+
+    print(results['1'])
+    finish = time.perf_counter()
+
+    print(f'Finished in {round(finish-start, 2)} second(s)')
 
 '''
