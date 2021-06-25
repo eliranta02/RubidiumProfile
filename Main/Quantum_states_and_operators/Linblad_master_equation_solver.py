@@ -13,6 +13,16 @@ import functools
 
 class ode_time_dependent_solver(object):
 
+    def timeDependentSolver(self,matrix,y0,time_arr,returnDic):
+        for time_val in time_arr:
+            eval, evec = eig(matrix)
+            #solT = dot((evec * (diag(exp(eval * time_val))) * inv(evec)), y0.transpose())
+            solT = evec * mat(diag(exp(eval * time_val))) * inv(evec) * y0
+            for idx1, key in enumerate(returnDic):
+                returnDic[key].append(solT[key].item())
+        return time_arr, returnDic
+
+
     def solveSteadyState(self,matrix):
         '''
 
@@ -65,7 +75,7 @@ class ode_time_dependent_solver(object):
 
         Parameters
         ----------
-        y0 : y0 = zeros((N,)) ; y0[1] = 1
+        y0 : y0 = zeros((N,1)) ; y0[1] = 1
         time_val: runing integration parameters (e.g. time parameter)
         returnDic : all the return values
 
@@ -75,9 +85,9 @@ class ode_time_dependent_solver(object):
         '''
 
         eval, evec = eig(matrix)
-        solT = dot((evec * (diag(exp(eval * time_val))) * inv(evec)), y0.transpose())
+        solT = evec * mat(diag(exp(eval * time_val))) * inv(evec) * y0
         for idx1, key in enumerate(returnDic):
-            returnDic[key].append(solT[idx1])
+            returnDic[key].append(solT[idx1].item())
 
         return returnDic
 
@@ -109,10 +119,10 @@ class Linblad_master_equation_solver(ode_time_dependent_solver):
 
         if self.is_multi_processing_enabled == True:
             with concurrent.futures.ProcessPoolExecutor() as executor:
-                time_val = 5
+                time_val = 1
                 results = executor.map(functools.partial(self.odeSolver, y0=y0, time_val = time_val, returnDic = returnDic), mat_solver)
         else:
-            time_val = 5
+            time_val = 1
             results = map(functools.partial(self.odeSolver, y0=y0, time_val = time_val, returnDic = returnDic), mat_solver)
 
         temp_list = list(results)

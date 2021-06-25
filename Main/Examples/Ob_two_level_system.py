@@ -26,7 +26,7 @@ def H(delta,omega,gamma):
 
 
 def callback(param):
-    ret_val = buildRhoMatrix(H(param, 2, 1), 2)
+    ret_val = buildRhoMatrix(H(param, 1, 0.9), 2)
     return ret_val
 
 if __name__ == "__main__":
@@ -34,27 +34,39 @@ if __name__ == "__main__":
     N = 2
     states_name = qunatum_states_dictionary.rhoMatrixNames(N)
     rho11 = states_name.getLocationByName('rho11')
+    rho12 = states_name.getLocationByName('rho12')
     rho22 = states_name.getLocationByName('rho22')
 
-    y0 = zeros((N * N,))
-    y0[0] = 1
+    y0 = zeros((N * N,1))
+    y0[rho11] = 1
+
 
     temp = Linblad_master_equation_solver(False)
 
-    returnDic = {rho11: [], rho11: []}
+    returnDic = {rho12: [], rho22: []}
 
-    running_param = linspace(0, 10, 10000)
+    running_param = linspace(-100, 100, 10000)
 
     results = temp.solve_master_equation_without_Doppler_effect(callback, running_param, y0, returnDic)
-
-    print(results[rho11])
 
     finish = time.perf_counter()
 
     print(f'Finished in {round(finish - start, 2)} second(s)')
 
     import pylab as plt
-    plt.plot(results[rho11])
+    plt.plot(results[rho22])
     plt.show()
+    '''
+    temp = Linblad_master_equation_solver(False)
+    returnDic = {rho12: [], rho22: [], rho11: []}
+    time_arr = linspace(0,100,100)
+    t, dic = temp.timeDependentSolver(callback(0), y0, time_arr, returnDic)
+    print(t)
 
+    import pylab as plt
+
+    plt.plot(dic[rho11])
+    plt.plot(dic[rho22])
+    plt.show()
+    '''
 
