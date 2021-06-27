@@ -1,7 +1,7 @@
 from __future__ import division, print_function
 
 from numpy import zeros, transpose, kron, sqrt, dot, array, linspace
-from numpy.linalg import solve
+from numpy.linalg import solve, lstsq
 from pylab import eig,mat,inv,exp,diag
 from scipy.integrate import ode
 
@@ -16,16 +16,13 @@ class ode_time_dependent_solver(object):
     def timeDependentSolver(self,matrix,y0,time_arr,returnDic):
         for time_val in time_arr:
             eval, evec = eig(matrix)
-            #solT = dot((evec * (diag(exp(eval * time_val))) * inv(evec)), y0.transpose())
             solT = evec * mat(diag(exp(eval * time_val))) * inv(evec) * y0
             for idx1, key in enumerate(returnDic):
                 returnDic[key].append(solT[key].item())
         return time_arr, returnDic
 
-
     def solveSteadyState(self,matrix):
         '''
-
         Returns
         ------
         the solution of steady state solution
@@ -40,10 +37,11 @@ class ode_time_dependent_solver(object):
         matrix[0] = vec
         res = zeros((N,))
         res[0] = 1
-        A = solve(matrix, res)
+        A = lstsq(matrix, res)
+        #TODO still needed to check
         return A
 
-    def odeSolverWithParam(self,jac, userSupply, param):
+    def timeDependentSolverWithParam(self,jac, userSupply, param):
         # initate state
         t0 = 0
         points = param[0]
@@ -104,11 +102,8 @@ class Linblad_master_equation_solver(ode_time_dependent_solver):
     def __init__(self, enable_multiprocessing):
         self.is_multi_processing_enabled = enable_multiprocessing
 
-
-
     def solve_master_equation_without_Doppler_effect(self, callback, detuning_param, y0, returnDic):
         '''
-
         :param callback:
         :param detuning_param:
         :param y0: initial vector  y0 = zeros((N,)) ; y0[1] = 1
@@ -119,14 +114,20 @@ class Linblad_master_equation_solver(ode_time_dependent_solver):
 
         if self.is_multi_processing_enabled == True:
             with concurrent.futures.ProcessPoolExecutor() as executor:
-                time_val = 1
+                time_val = 2
                 results = executor.map(functools.partial(self.odeSolver, y0=y0, time_val = time_val, returnDic = returnDic), mat_solver)
-        else:
-            time_val = 1
-            results = map(functools.partial(self.odeSolver, y0=y0, time_val = time_val, returnDic = returnDic), mat_solver)
 
-        temp_list = list(results)
-        ret_val = temp_list[len(temp_list) - 1]
+            ret_val ={}
+            for key_name in returnDic.keys():
+                ret_val[key_name] = []
+            for item_list in list(results):
+                for key_name in returnDic.keys():
+                    ret_val[key_name].append(item_list[key_name][0])
+        else:
+            time_val = 2
+            results = map(functools.partial(self.odeSolver, y0=y0, time_val = time_val, returnDic = returnDic), mat_solver)
+            temp_list = list(results)
+            ret_val = temp_list[len(temp_list) - 1]
 
         return ret_val
 

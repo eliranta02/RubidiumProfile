@@ -11,7 +11,7 @@ def init_states():
     return state1, state2
 
 
-def H(delta,omega,gamma):
+def H(delta,omega):
     global states
     if states == None:
         states = init_states()
@@ -21,12 +21,22 @@ def H(delta,omega,gamma):
     rho22 = a2 *a2
     rho12 = a1 * a2
     rho21 = a2 * a1
-    H = (delta - 1j * gamma)* rho22 + 0.5 * omega * rho12 + 0.5 * omega * rho21
+    H = (delta) * rho22 + 0.5 * omega * rho12 + 0.5 * omega * rho21
     return H
+
+def decay_martrix(gamma):
+    global states
+    if states == None:
+        states = init_states()
+
+    a1, a2 = states
+    rho22 = a2 * a2
+    L = gamma * rho22
+    return L
 
 
 def callback(param):
-    ret_val = buildRhoMatrix(H(param, 1, 0.9), 2)
+    ret_val = buildRhoMatrix(H(param, 2), 2) + buildGammaMatrix(decay_martrix(6.05), 2)
     return ret_val
 
 if __name__ == "__main__":
@@ -37,15 +47,15 @@ if __name__ == "__main__":
     rho12 = states_name.getLocationByName('rho12')
     rho22 = states_name.getLocationByName('rho22')
 
-    y0 = zeros((N * N,1))
+    y0 = zeros((N * N, 1))
     y0[rho11] = 1
 
 
-    temp = Linblad_master_equation_solver(False)
+    temp = Linblad_master_equation_solver(True)
 
     returnDic = {rho12: [], rho22: []}
 
-    running_param = linspace(-100, 100, 10000)
+    running_param = linspace(-50, 50, 1000)
 
     results = temp.solve_master_equation_without_Doppler_effect(callback, running_param, y0, returnDic)
 
@@ -54,8 +64,16 @@ if __name__ == "__main__":
     print(f'Finished in {round(finish - start, 2)} second(s)')
 
     import pylab as plt
-    plt.plot(results[rho22])
+
+    a = results[rho22]
+
+    solution = [res.imag for res in results[rho22]]
+
+    plt.plot(solution)
     plt.show()
+
+
+
     '''
     temp = Linblad_master_equation_solver(False)
     returnDic = {rho12: [], rho22: [], rho11: []}
