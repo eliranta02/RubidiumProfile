@@ -51,13 +51,14 @@ if __name__ == "__main__":
     y0[rho11] = 1
 
 
-    temp = Linblad_master_equation_solver(True)
+    temp = Linblad_master_equation_solver(False)
 
     returnDic = {rho12: [], rho22: []}
 
     running_param = linspace(-50, 50, 1000)
-
-    results = temp.solve_master_equation_without_Doppler_effect(callback, running_param, y0, returnDic)
+    v_param = linspace(-10,10,100)
+    time_val = 2
+    results = temp.solve_master_equation_with_Doppler_effect(callback, running_param, v_param, y0, time_val, returnDic)
 
     finish = time.perf_counter()
 
