@@ -3,13 +3,16 @@ from __future__ import division, print_function
 from numpy import zeros, transpose, kron, sqrt, dot, array, linspace
 from numpy.linalg import solve, lstsq
 from pylab import eig,mat,inv,exp,diag
-from scipy.integrate import ode
+from scipy.integrate import ode, simps
 
 import concurrent.futures
 import time
 import functools
 
+from Main.Constants.Velocities_distribution import *
+
 from Main.Unit_converters.Rb_unit_converter import *
+from Main.Unit_converters.Global_unit_converter import *
 
 #from abc import ABCMeta, abstractmethod
 
@@ -132,9 +135,18 @@ class Linblad_master_equation_solver(ode_time_dependent_solver):
         return ret_val
 
     def solve_master_equation_with_Doppler_effect(self, callback, detuning_param, velocity_param, y0, time_val, returnDic):
-        for del_val in detuning_param:
+        ret_val = {}
+
+
+        for key_name in returnDic.keys():
+            ret_val[key_name] = []
+
+        velocity_dist = [maxwell(param, temp2velocity(celsius2kelvin(50))) for param in velocity_param]
+        for idx, del_val in enumerate(detuning_param):
+            print(idx)
             k = 1
             mat_solver = [callback(param) for param in del_val-k*velocity_param]
+
 
             if self.is_multi_processing_enabled == True:
                 pass
@@ -142,9 +154,12 @@ class Linblad_master_equation_solver(ode_time_dependent_solver):
                 results = map(functools.partial(self.odeSolver, y0=y0, time_val=time_val, returnDic=returnDic), mat_solver)
                 temp_list = list(results)
                 temp = temp_list[len(temp_list) - 1]
-                a = 1
+                products = {}
+                for key_name in returnDic.keys():
+                    products[key_name] = [a * b for a, b in zip(temp[key_name], velocity_dist)]
 
-
+            for key_name in returnDic.keys():
+                ret_val[key_name].append(simps(products[key_name],velocity_param))
 
         return ret_val
 
@@ -279,3 +294,5 @@ if __name__ == '__main__':
     print(f'Finished in {round(finish-start, 2)} second(s)')
 
 '''
+
+
