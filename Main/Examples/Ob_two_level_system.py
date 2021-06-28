@@ -55,6 +55,9 @@ if __name__ == "__main__":
 
     returnDic = {rho12: [], rho22: []}
 
+    running_param = linspace(-1000, 1000, 200)
+    v_param = linspace(-300,300,100)
+    time_val = 5
     running_param = linspace(-20, 20, 300)
     v_param = linspace(-20,20,100)
     time_val = 2
@@ -68,6 +71,7 @@ if __name__ == "__main__":
 
     a = results[rho12]
 
+    solution = [res.real for res in results[rho22]]
     solution = [1e19*res.imag for res in results[rho22]]
 
     plt.plot(running_param, solution)

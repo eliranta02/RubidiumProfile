@@ -120,12 +120,6 @@ class Linblad_master_equation_solver(ode_time_dependent_solver):
                 w = maxwell(v, 300)
                 #rho12_vel.append(w * )
 
-
-
-
-
-
-
     def solve_master_equation_without_Doppler_effect(self, callback, detuning_param, y0, time_val, returnDic):
         '''
         :param callback:
