@@ -53,15 +53,13 @@ if __name__ == "__main__":
 
     temp = Linblad_master_equation_solver(False)
 
-    returnDic = {rho12: [], rho22: []}
+    returnDic = [rho12, rho22]
 
-    running_param = linspace(-1000, 1000, 200)
-    v_param = linspace(-300,300,100)
-    time_val = 5
-    running_param = linspace(-20, 20, 300)
-    v_param = linspace(-20,20,100)
-    time_val = 2
+    running_param = linspace(-500, 500, 500)
+    v_param = linspace(-100,100,500)
+    time_val = 3
     results = temp.solve_master_equation_with_Doppler_effect(callback, running_param, v_param, y0, time_val, returnDic)
+
 
     finish = time.perf_counter()
 
@@ -69,10 +67,9 @@ if __name__ == "__main__":
 
     import pylab as plt
 
-    a = results[rho12]
+    #a = results[rho12]
 
     solution = [res.real for res in results[rho22]]
-    solution = [1e19*res.imag for res in results[rho22]]
 
     plt.plot(running_param, solution)
     plt.show()

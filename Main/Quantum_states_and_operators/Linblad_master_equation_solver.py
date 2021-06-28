@@ -16,15 +16,16 @@ from Main.Unit_converters.Global_unit_converter import *
 
 #from abc import ABCMeta, abstractmethod
 
-class ode_time_dependent_solver(object):
+class Ode_time_dependent_solver(object):
 
-    def timeDependentSolver(self,matrix,y0,time_arr,returnDic):
+    def timeDependentSolver(self,matrix,y0,time_arr,keys):
         for time_val in time_arr:
             eval, evec = eig(matrix)
             solT = evec * mat(diag(exp(eval * time_val))) * inv(evec) * y0
-            for idx1, key in enumerate(returnDic):
-                returnDic[key].append(solT[key].item())
-        return time_arr, returnDic
+            ret_val = {}
+            for key in keys:
+                ret_val[key] = solT[key].item()
+        return time_arr, ret_val
 
     def solveSteadyState(self,matrix):
         '''
@@ -72,7 +73,7 @@ class ode_time_dependent_solver(object):
 
         return x, y
 
-    def odeSolver(self,matrix,y0,time_val,returnDic):
+    def odeSolver(self,matrix,y0,time_val,keys):
 
         '''
 
@@ -80,19 +81,19 @@ class ode_time_dependent_solver(object):
         ----------
         y0 : y0 = zeros((N,1)) ; y0[1] = 1
         time_val: runing integration parameters (e.g. time parameter)
-        returnDic : all the return values
+        keys : all the return values
 
         Returns
         -------
         returnDic
         '''
-
         eval, evec = eig(matrix)
         solT = evec * mat(diag(exp(eval * time_val))) * inv(evec) * y0
-        for idx1, key in enumerate(returnDic):
-            returnDic[key].append(solT[idx1].item())
+        retval = {}
+        for key in keys:
+            retval[key]= solT[key].item()
 
-        return returnDic
+        return retval
 
     @staticmethod
     def print_info():
@@ -102,25 +103,38 @@ class ode_time_dependent_solver(object):
         N = len(self.matrix)
         return 'The number of levels : {} \nThe '.format(int(sqrt(N)))
 
-class Linblad_master_equation_solver(ode_time_dependent_solver):
+class Linblad_master_equation_solver(Ode_time_dependent_solver):
 
     def __init__(self, enable_multiprocessing):
         self.is_multi_processing_enabled = enable_multiprocessing
 
-    def test_solve(self,callback, y0, delta_array,v_array):
-        time_val = 1
-        rho12_del = []
-        for delt in delta_array:
-            rho12_vel = []
-            for v in v_array:
-                delta = delt - k * v
-                matrix =callback(delta)
-                eval, evec = eig(matrix)
-                solT = evec * mat(diag(exp(eval * time_val))) * inv(evec) * y0
-                w = maxwell(v, 300)
-                #rho12_vel.append(w * )
+    '''def test_solve(self,callback, delta_array,v_array, y0):
+        time_val = 3
+        k_wave = 1
+        rho22 = zeros((4 ,1))
+        rho22[3] = 1
+        rho22_del = []
 
-    def solve_master_equation_without_Doppler_effect(self, callback, detuning_param, y0, time_val, returnDic):
+        for idx, delt in enumerate(delta_array):
+            returnDic = {3: []}
+            rho22_vel = []
+            for v in v_array:
+                delta = delt - k_wave * v
+                matrix = callback(delta)
+                #eval, evec = eig(matrix)
+                #solT = evec * mat(diag(exp(eval * time_val))) * inv(evec) * y0
+                #sol_with_doppler = ((transpose(rho22) * solT)).item()
+                #rho22_vel.append(sol_with_doppler)
+                sol_with_doppler = self.odeSolver(matrix,y0,time_val,returnDic)
+
+            velocity_dist = [maxwell(param, 300) for param in v_array]
+            #product = [a * b for a, b in zip(rho22_vel, velocity_dist)]
+            product1 = [a * b for a, b in zip(returnDic[3], velocity_dist)]
+
+            #rho22_del.append(simps(product,v_array))
+            rho22_del.append(simps(product1,v_array))
+        return rho22_del'''
+    def solve_master_equation_without_Doppler_effect(self, callback, detuning_param, y0, time_val, keys):
         '''
         :param callback:
         :param detuning_param:
@@ -128,54 +142,54 @@ class Linblad_master_equation_solver(ode_time_dependent_solver):
         :param returnDic:
         :return:
         '''
+
+        ret_val = {}
+        for key in keys:
+            ret_val[key] = []
+
         mat_solver = [callback(param) for param in detuning_param]
 
         if self.is_multi_processing_enabled == True:
             with concurrent.futures.ProcessPoolExecutor() as executor:
-                results = executor.map(functools.partial(self.odeSolver, y0 = y0, time_val = time_val, returnDic = returnDic), mat_solver)
-
-            ret_val ={}
-            for key_name in returnDic.keys():
-                ret_val[key_name] = []
-            for item_list in list(results):
-                for key_name in returnDic.keys():
-                    ret_val[key_name].append(item_list[key_name][0])
+                results = executor.map(functools.partial(self.odeSolver, y0 = y0, time_val = time_val, keys = keys), mat_solver)
+                temp_list = list(results)
         else:
-            results = map(functools.partial(self.odeSolver, y0=y0, time_val = time_val, returnDic = returnDic), mat_solver)
+            results = map(functools.partial(self.odeSolver, y0=y0, time_val = time_val, keys = keys), mat_solver)
             temp_list = list(results)
-            ret_val = temp_list[len(temp_list) - 1]
+
+        for key in keys:
+            ret_val[key] = [item[key] for item in temp_list]
 
         return ret_val
 
-    def solve_master_equation_with_Doppler_effect(self, callback, detuning_param, velocity_param, y0, time_val, returnDic):
+    def solve_master_equation_with_Doppler_effect(self, callback, detuning_param, velocity_param, y0, time_val, keys):
         ret_val = {}
+        for key in keys:
+            ret_val[key] = []
 
-
-        for key_name in returnDic.keys():
-            ret_val[key_name] = []
-
-        #velocity_dist = [maxwell(param, temp2velocity(celsius2kelvin(50))) for param in velocity_param]
-        velocity_dist = [maxwell(param, 2) for param in velocity_param]
-
+        velocity_dist = [maxwell(param, temp2velocity(celsius2kelvin(50))) for param in velocity_param]
+        #velocity_dist = [maxwell(param, 300) for param in velocity_param]
 
         for idx, del_val in enumerate(detuning_param):
+            k_wave = 1
             print(idx)
-            k = 1
-            mat_solver = [callback(param) for param in (del_val-k*velocity_param)]
-
-
+            mat_solver = [callback(param) for param in (del_val-k_wave * velocity_param)]
             if self.is_multi_processing_enabled == True:
-                pass
+                with concurrent.futures.ProcessPoolExecutor() as executor:
+                    results = executor.map(functools.partial(self.odeSolver, y0=y0, time_val=time_val, keys=keys),
+                                           mat_solver)
+                    temp_list = list(results)
             else:
-                results = map(functools.partial(self.odeSolver, y0=y0, time_val=time_val, returnDic=returnDic), mat_solver)
+                results = map(functools.partial(self.odeSolver, y0=y0, time_val=time_val, keys = keys), mat_solver)
                 temp_list = list(results)
-                temp = temp_list[len(temp_list) - 1]
-                products = {}
-                for key_name in returnDic.keys():
-                    products[key_name] = [a * b for a, b in zip(temp[key_name], velocity_dist)]
 
-            for key_name in returnDic.keys():
-                ret_val[key_name].append(simps(products[key_name],velocity_param))
+            vell = {}
+            for key in keys:
+                rho = [item[key] for item in temp_list]
+                vell[key] = [a * b for a, b in zip(rho, velocity_dist)]
+
+            for key in keys:
+                ret_val[key].append(simps(vell[key],velocity_param))
 
         return ret_val
 
@@ -197,116 +211,4 @@ def userSupply(t,y,param):
             sumVal+=rhoDot[i][j]*y[j]
         retVal[i]=sumVal
     return retVal
-
-def buildRhoMatrix(d):
-    mat = array([[1,0,0,0],\
-                 [0,2,3,0],\
-                 [0,3,2,0],\
-                 [0,0,0,d]])
-    return mat
-
-
-a = Linblad_Solver()
-
-points = 100
-t_scan = 1
-y0 = zeros((4,))
-y0[1] = 1
-delta = -2
-
-param = [points,t_scan,y0,delta]
-x,y = a.odeSolverWithParam(jac,userSupply,param)
-
-print(x)
-print('*'*20)
-print(y)
-
-
-'''
-
-'''
-from numpy import array, linspace
-
-def buildRhoMatrix(d):
-    mat = array([[1,0,0,0],\
-                 [0,2,-3,0],\
-                 [0,3,-1,0],\
-                 [0,0,0,d]])
-    return mat
-
-
-a = Linblad_Solver()
-a.matrix = buildRhoMatrix(1)
-y0 = zeros((4,))
-y0[1] = 1
-
-time_arr = linspace(0, 100, 1000)
-
-
-from pylab import *
-
-myDict = {}
-myDict['1,1'] = []
-myDict['1,0'] = []
-
-myDict = a.odeSolver(y0,time_arr,myDict)
-
-plot(time_arr,real(myDict['1,1']))
-plot(time_arr,real(myDict['1,0']))
-show()
-'''
-
-'''
-from numpy import array, dot
-
-def buildRhoMatrix(d):
-    tempmat = array([[1,0,0,0],\
-                 [0,2,-3,0],\
-                 [0,3,-1,0],\
-                 [0,0,0,d]])
-    return tempmat
-
-
-
-
-a = Linblad_Solver()
-a.matrix = buildRhoMatrix(2)
-
-#print(a)
-
-d = array([[1, 0],\
-           [0,1]])
-
-cc = d.reshape((4,))
-c = transpose(cc)
-
-
-print(dot(c,cc))
-'''
-'''
-if __name__ == '__main__':
-    start = time.perf_counter()
-    N = 4
-    def callback(d):
-        mat = array([[1,0,d,d], \
-                     [0,2,3,d], \
-                     [d,3,2,0], \
-                     [0,0,0,d]])
-        return mat
-
-    y0 = zeros((N,)) ; y0[1] = 1
-
-    temp = Linblad_master_equation_solver(False)
-
-    returnDic = {'1' : [], '2': []}
-
-    running_param = linspace(1,106,10000)
-
-    results = temp.solve_master_equation_without_Doppler_effect(callback, running_param,y0,returnDic)
-
-    print(results['1'])
-    finish = time.perf_counter()
-
-    print(f'Finished in {round(finish-start, 2)} second(s)')
-
 '''
