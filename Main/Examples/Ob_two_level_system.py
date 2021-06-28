@@ -55,9 +55,9 @@ if __name__ == "__main__":
 
     returnDic = [rho12, rho22]
 
-    running_param = linspace(-500, 500, 500)
-    v_param = linspace(-100,100,500)
-    time_val = 3
+    running_param = linspace(-500, 500, 1000)
+    v_param = linspace(-600,600,500)
+    time_val = 1
     results = temp.solve_master_equation_with_Doppler_effect(callback, running_param, v_param, y0, time_val, returnDic)
 
 

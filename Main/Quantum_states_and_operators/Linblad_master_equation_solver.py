@@ -13,6 +13,8 @@ from Main.Constants.Velocities_distribution import *
 
 from Main.Unit_converters.Rb_unit_converter import *
 from Main.Unit_converters.Global_unit_converter import *
+from tqdm import tqdm
+
 
 #from abc import ABCMeta, abstractmethod
 
@@ -168,11 +170,9 @@ class Linblad_master_equation_solver(Ode_time_dependent_solver):
             ret_val[key] = []
 
         velocity_dist = [maxwell(param, temp2velocity(celsius2kelvin(50))) for param in velocity_param]
-        #velocity_dist = [maxwell(param, 300) for param in velocity_param]
 
-        for idx, del_val in enumerate(detuning_param):
+        for del_val in tqdm(detuning_param):
             k_wave = 1
-            print(idx)
             mat_solver = [callback(param) for param in (del_val-k_wave * velocity_param)]
             if self.is_multi_processing_enabled == True:
                 with concurrent.futures.ProcessPoolExecutor() as executor:
