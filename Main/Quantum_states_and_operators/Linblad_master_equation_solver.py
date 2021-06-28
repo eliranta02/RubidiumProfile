@@ -107,6 +107,25 @@ class Linblad_master_equation_solver(ode_time_dependent_solver):
     def __init__(self, enable_multiprocessing):
         self.is_multi_processing_enabled = enable_multiprocessing
 
+    def test_solve(self,callback, y0, delta_array,v_array):
+        time_val = 1
+        rho12_del = []
+        for delt in delta_array:
+            rho12_vel = []
+            for v in v_array:
+                delta = delt - k * v
+                matrix =callback(delta)
+                eval, evec = eig(matrix)
+                solT = evec * mat(diag(exp(eval * time_val))) * inv(evec) * y0
+                w = maxwell(v, 300)
+                #rho12_vel.append(w * )
+
+
+
+
+
+
+
     def solve_master_equation_without_Doppler_effect(self, callback, detuning_param, y0, time_val, returnDic):
         '''
         :param callback:
@@ -119,7 +138,7 @@ class Linblad_master_equation_solver(ode_time_dependent_solver):
 
         if self.is_multi_processing_enabled == True:
             with concurrent.futures.ProcessPoolExecutor() as executor:
-                results = executor.map(functools.partial(self.odeSolver, y0=y0, time_val = time_val, returnDic = returnDic), mat_solver)
+                results = executor.map(functools.partial(self.odeSolver, y0 = y0, time_val = time_val, returnDic = returnDic), mat_solver)
 
             ret_val ={}
             for key_name in returnDic.keys():
@@ -141,11 +160,14 @@ class Linblad_master_equation_solver(ode_time_dependent_solver):
         for key_name in returnDic.keys():
             ret_val[key_name] = []
 
-        velocity_dist = [maxwell(param, temp2velocity(celsius2kelvin(50))) for param in velocity_param]
+        #velocity_dist = [maxwell(param, temp2velocity(celsius2kelvin(50))) for param in velocity_param]
+        velocity_dist = [maxwell(param, 2) for param in velocity_param]
+
+
         for idx, del_val in enumerate(detuning_param):
             print(idx)
             k = 1
-            mat_solver = [callback(param) for param in del_val-k*velocity_param]
+            mat_solver = [callback(param) for param in (del_val-k*velocity_param)]
 
 
             if self.is_multi_processing_enabled == True:
@@ -294,5 +316,3 @@ if __name__ == '__main__':
     print(f'Finished in {round(finish-start, 2)} second(s)')
 
 '''
-
-
