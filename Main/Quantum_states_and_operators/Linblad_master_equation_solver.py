@@ -6,7 +6,6 @@ from pylab import eig,mat,inv,exp,diag
 from scipy.integrate import ode, simps
 
 import concurrent.futures
-import time
 import functools
 
 from Main.Constants.Velocities_distribution import *
@@ -15,8 +14,6 @@ from Main.Unit_converters.Rb_unit_converter import *
 from Main.Unit_converters.Global_unit_converter import *
 from tqdm import tqdm
 
-
-#from abc import ABCMeta, abstractmethod
 
 class Ode_time_dependent_solver(object):
 

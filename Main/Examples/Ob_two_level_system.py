@@ -40,7 +40,7 @@ def callback(param):
     return ret_val
 
 if __name__ == "__main__":
-    start = time.perf_counter()
+    #start = time.perf_counter()
     N = 2
     states_name = qunatum_states_dictionary.rhoMatrixNames(N)
     rho11 = states_name.getLocationByName('rho11')
@@ -60,10 +60,8 @@ if __name__ == "__main__":
     time_val = 1
     results = temp.solve_master_equation_with_Doppler_effect(callback, running_param, v_param, y0, time_val, returnDic)
 
-
-    finish = time.perf_counter()
-
-    print(f'Finished in {round(finish - start, 2)} second(s)')
+    #finish = time.perf_counter()
+    #print(f'Finished in {round(finish - start, 2)} second(s)')
 
     import pylab as plt
 
