@@ -36,7 +36,7 @@ def decay_martrix(gamma):
 
 
 def callback(param):
-    ret_val = buildRhoMatrix(H(param, 2), 2) + buildGammaMatrix(decay_martrix(6.05), 2)
+    ret_val = buildRhoMatrix(H(param, 2), 2) + buildGammaMatrix(decay_martrix(0.5), 2)
     return ret_val
 
 if __name__ == "__main__":
@@ -55,8 +55,8 @@ if __name__ == "__main__":
 
     returnDic = {rho12: [], rho22: []}
 
-    running_param = linspace(-50, 50, 1000)
-    v_param = linspace(-10,10,100)
+    running_param = linspace(-20, 20, 300)
+    v_param = linspace(-20,20,100)
     time_val = 2
     results = temp.solve_master_equation_with_Doppler_effect(callback, running_param, v_param, y0, time_val, returnDic)
 
@@ -66,11 +66,11 @@ if __name__ == "__main__":
 
     import pylab as plt
 
-    a = results[rho22]
+    a = results[rho12]
 
-    solution = [res.imag for res in results[rho22]]
+    solution = [1e19*res.imag for res in results[rho22]]
 
-    plt.plot(solution)
+    plt.plot(running_param, solution)
     plt.show()
 
 
