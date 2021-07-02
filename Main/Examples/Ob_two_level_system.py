@@ -3,7 +3,12 @@ from Main.Quantum_states_and_operators import q_state, qunatum_states_dictionary
 from Main.Quantum_states_and_operators.build_bloch_equation_matrix import *
 from Main.Quantum_states_and_operators.Linblad_master_equation_solver import  *
 
+from Main.Constants.Rb_constants import *
+
+import pylab as plt
+
 states = None
+N = 2
 
 def init_states():
     state1 = q_state.State(2,0,1)
@@ -36,12 +41,11 @@ def decay_martrix(gamma):
 
 
 def callback(param):
-    ret_val = buildRhoMatrix(H(param, 2), 2) + buildGammaMatrix(decay_martrix(0.5), 2)
+    omegaProbe = 2 * pi * 0.5e5
+    ret_val = buildRhoMatrix(H(param, omegaProbe), N) + buildGammaMatrix(decay_martrix(gamma), N)
     return ret_val
 
 if __name__ == "__main__":
-    #start = time.perf_counter()
-    N = 2
     states_name = qunatum_states_dictionary.rhoMatrixNames(N)
     rho11 = states_name.getLocationByName('rho11')
     rho12 = states_name.getLocationByName('rho12')
@@ -51,40 +55,18 @@ if __name__ == "__main__":
     y0[rho11] = 1
 
 
-    temp = Linblad_master_equation_solver(False)
+    lmes = Linblad_master_equation_solver(False)
 
     returnDic = [rho12, rho22]
 
-    running_param = linspace(-500, 500, 1000)
-    v_param = linspace(-600,600,500)
-    time_val = 1
-    results = temp.solve_master_equation_with_Doppler_effect(callback, running_param, v_param, y0, time_val, returnDic)
-
-    #finish = time.perf_counter()
-    #print(f'Finished in {round(finish - start, 2)} second(s)')
-
-    import pylab as plt
-
-    #a = results[rho12]
+    running_param = linspace(-2 * pi * 2e9, 2 * pi * 2e9, 300) #(frequency scaning) detuning array
+    v_param = linspace(-600, 600, 500) #atomic velocities array
+    time_val = 0.1
+    k_wave = k_num
+    Tc = 50
+    results = lmes.solve_master_equation_with_Doppler_effect(callback, running_param, v_param, y0, time_val, k_wave, Tc, returnDic)
 
     solution = [res.real for res in results[rho22]]
-
     plt.plot(running_param, solution)
     plt.show()
-
-
-
-    '''
-    temp = Linblad_master_equation_solver(False)
-    returnDic = {rho12: [], rho22: [], rho11: []}
-    time_arr = linspace(0,100,100)
-    t, dic = temp.timeDependentSolver(callback(0), y0, time_arr, returnDic)
-    print(t)
-
-    import pylab as plt
-
-    plt.plot(dic[rho11])
-    plt.plot(dic[rho22])
-    plt.show()
-    '''
 

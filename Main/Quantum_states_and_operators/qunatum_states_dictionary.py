@@ -33,13 +33,15 @@ class rhoMatrixNames:
 
 
     def __str__(self):
-        txt = ''
+        txt = 'rho = \n'
         for i in range(self.N):
+            txt += '\t'
             for idx, j in enumerate(range(self.N-1)):
                 txt +='rho'+str(i+1)+str(j+1)+'| '
             txt += 'rho' + str(i + 1) + str(j + 2)
-            txt += '\n'
-            txt += 30 * '-'
+            txt += '\n\t'
+            txt += 20 * '-'
+            txt += '\t'
             txt += '\n' 
         return txt
 

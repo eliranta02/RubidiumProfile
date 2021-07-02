@@ -161,15 +161,14 @@ class Linblad_master_equation_solver(Ode_time_dependent_solver):
 
         return ret_val
 
-    def solve_master_equation_with_Doppler_effect(self, callback, detuning_param, velocity_param, y0, time_val, keys):
+    def solve_master_equation_with_Doppler_effect(self, callback, detuning_param, velocity_param, y0, time_val, k_wave, Tc, keys):
         ret_val = {}
         for key in keys:
             ret_val[key] = []
 
-        velocity_dist = [maxwell(param, temp2velocity(celsius2kelvin(50))) for param in velocity_param]
+        velocity_dist = [maxwell(param, temp2velocity(celsius2kelvin(Tc))) for param in velocity_param]
 
         for del_val in tqdm(detuning_param):
-            k_wave = 1
             mat_solver = [callback(param) for param in (del_val-k_wave * velocity_param)]
             if self.is_multi_processing_enabled == True:
                 with concurrent.futures.ProcessPoolExecutor() as executor:
