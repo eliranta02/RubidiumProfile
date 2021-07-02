@@ -7,7 +7,7 @@ from FundamentalConstants import *
 from sz_lsi import sz, lz, Iz
 from fs_hfs import Hfs,Hhfs,Bbhfs
 
-from PlottingTemplate import *
+import pylab as plt
 
 def groundStateManifold(A_hyp_coeff,IsotopeShift,Bfield):
     """Function to produce the ground state manifold"""
@@ -85,6 +85,7 @@ for Bfield in B:
     #val11.append(x[11])
 
 '''
+#Example
 plt.figure(1,facecolor='w',figsize=(5, 4))
 
 B = 0.0001 * B
@@ -107,34 +108,4 @@ plt.ylabel('E/h [GHz]')
 plt.tight_layout()
 #plt.savefig('magnetic_sublevel.png')
 plt.show()
-'''
-'''
-
-I  = AC.I        #Nuclear spin
-A_hyp_coeff = 25.038 #Ground state hyperfine constant in units of MHz
-gI = 25.038 #nuclear spin g-factor
-IsotopeShift=21.734
-B_hyp_coeff=26.011
-gL=1.0
-#Bfield=10
-
-from pylab import *
-B =linspace(1e-7,20,10000)
-
-val=[]
-for i in range(36):
-    val.append([])
-loc=0
-for Bfield in B:
-    x=excitedStateManifold(gL,A_hyp_coeff,B_hyp_coeff,Bfield)[1]
-    for i in range(len(x)):
-        val[i].append(x[i])
-
-
-for i in range(12,36):
-    plot(val[i])
-
-
-show()
-
 '''
