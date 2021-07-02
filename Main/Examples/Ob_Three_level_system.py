@@ -133,7 +133,7 @@ def H_Ladder(delta_pr, delta_pu, omega_pr, omega_pu):
     rho23 = a2 * a3
     rho32 = a3 * a2
 
-    H = (delta_pr) * rho22 + (delta_pr + delta_pu) * rho33 + 0.5 * omega_pr * rho23 + 0.5 * omega_pr * rho32 + \
+    H = (delta_pu) * rho22 + (delta_pr + delta_pu) * rho33 + 0.5 * omega_pr * rho23 + 0.5 * omega_pr * rho32 + \
         0.5 * omega_pu * rho12 + 0.5 * omega_pu * rho21
 
     return H
@@ -157,12 +157,16 @@ def repopulation_decay_matrix_Ladder(gamma2, gamma3):
 #-----------------------------------------------------------------------#
 
 def callback(param):
-    omegaProbe = 2 * pi * 0.5e5
-    omegaPump = 2 * pi * 0.5e5
+    k_pump = 795e-9
+    k_probe = 780e-9
+    omegaProbe = 2 * pi * 10e5
+    omegaPump = 2 * pi * 1e6
     delta_pu = 0
+    (del_val, velocity) = param
+
     if DIAGRAM_LEVEL_TYPE == VEE_TYPE:
         gamma2, gamma3 = 2 * pi * 6.06e6, 2 * pi * 5.75e6
-        ret_val = buildRhoMatrix(H_vee(param,delta_pu, omegaProbe, omegaPump), N) + buildGammaMatrix(decay_martrix_vee(gamma2, gamma3), N)
+        ret_val = buildRhoMatrix(H_vee(del_val-k_probe * velocity, delta_pu + k_pump * velocity, omegaProbe, omegaPump), N) + buildGammaMatrix(decay_martrix_vee(gamma2, gamma3), N)
         ret_val += repopulation_decay_matrix_vee(gamma2, gamma3)
 
     if DIAGRAM_LEVEL_TYPE == LAMBDA_TYPE:
@@ -182,14 +186,38 @@ def callback(param):
 
 
 if __name__ == "__main__":
+    # init all states
     init()
+
     states_name = qunatum_states_dictionary.rhoMatrixNames(N)
     rho11 = states_name.getLocationByName('rho11')
     rho12 = states_name.getLocationByName('rho12')
     rho22 = states_name.getLocationByName('rho22')
     print(states_name)
-    '''v = decay_martrix_vee(1, 1)
-    print(v)
-    a = buildGammaMatrix(decay_martrix_vee(1, 1), N)
-    print('-----')
-    print(a)'''
+
+    if DIAGRAM_LEVEL_TYPE == VEE_TYPE:
+
+        y0 = zeros((N * N, 1))
+        y0[rho11] = 0.5
+        y0[rho22] = 0.5
+
+        lmes = Linblad_master_equation_solver(False)
+
+        returnDic = [rho12, rho22]
+
+        running_param = linspace(-2 * pi * 0.1e9, 2 * pi * 0.1e9, 500)  # (frequency scaning) detuning array
+        v_param = linspace(-600, 600, 500)  # atomic velocities array
+        time_val = 0.1
+        Tc = 50
+        results = lmes.solve_master_equation_with_Doppler_effect(callback, running_param, v_param, y0, time_val,
+                                                                 Tc, returnDic)
+        solution = [res.real for res in results[rho22]]
+        plt.plot(running_param, solution)
+        plt.show()
+
+
+    if DIAGRAM_LEVEL_TYPE == LAMBDA_TYPE:
+        pass
+
+    if DIAGRAM_LEVEL_TYPE == LADDER_TYPE:
+        pass

@@ -146,7 +146,7 @@ class Linblad_master_equation_solver(Ode_time_dependent_solver):
         for key in keys:
             ret_val[key] = []
 
-        mat_solver = [callback(param) for param in detuning_param]
+        mat_solver = [callback((param, 0)) for param in detuning_param]
 
         if self.is_multi_processing_enabled == True:
             with concurrent.futures.ProcessPoolExecutor() as executor:
@@ -161,7 +161,7 @@ class Linblad_master_equation_solver(Ode_time_dependent_solver):
 
         return ret_val
 
-    def solve_master_equation_with_Doppler_effect(self, callback, detuning_param, velocity_param, y0, time_val, k_wave, Tc, keys):
+    def solve_master_equation_with_Doppler_effect(self, callback, detuning_param, velocity_param, y0, time_val, Tc, keys):
         ret_val = {}
         for key in keys:
             ret_val[key] = []
@@ -169,7 +169,8 @@ class Linblad_master_equation_solver(Ode_time_dependent_solver):
         velocity_dist = [maxwell(param, temp2velocity(celsius2kelvin(Tc))) for param in velocity_param]
 
         for del_val in tqdm(detuning_param):
-            mat_solver = [callback(param) for param in (del_val-k_wave * velocity_param)]
+            #mat_solver = [callback(param) for param in (del_val-k_wave * velocity_param)]
+            mat_solver = [callback((del_val, velocity)) for velocity in velocity_param]
             if self.is_multi_processing_enabled == True:
                 with concurrent.futures.ProcessPoolExecutor() as executor:
                     results = executor.map(functools.partial(self.odeSolver, y0=y0, time_val=time_val, keys=keys),

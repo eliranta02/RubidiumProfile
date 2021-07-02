@@ -42,7 +42,8 @@ def decay_martrix(gamma):
 
 def callback(param):
     omegaProbe = 2 * pi * 0.5e5
-    ret_val = buildRhoMatrix(H(param, omegaProbe), N) + buildGammaMatrix(decay_martrix(gamma), N)
+    (del_val, velocity) = param
+    ret_val = buildRhoMatrix(H(del_val-k_wave * velocity, omegaProbe), N) + buildGammaMatrix(decay_martrix(gamma), N)
     return ret_val
 
 if __name__ == "__main__":
@@ -64,7 +65,7 @@ if __name__ == "__main__":
     time_val = 0.1
     k_wave = k_num
     Tc = 50
-    results = lmes.solve_master_equation_with_Doppler_effect(callback, running_param, v_param, y0, time_val, k_wave, Tc, returnDic)
+    results = lmes.solve_master_equation_with_Doppler_effect(callback, running_param, v_param, y0, time_val, Tc, returnDic)
 
     solution = [res.real for res in results[rho22]]
     plt.plot(running_param, solution)
