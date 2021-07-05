@@ -3,7 +3,6 @@ from Main.Operators.Wigner_Calc import *
 from numpy import sqrt, pi
 from Main.Constants.Rb_constants import *
 from scipy.constants import c, hbar, h
-from q_state import State
 from Main.Constants.Rb_constants import I
 #from Main.Operators.utils import intensity_calc
 
