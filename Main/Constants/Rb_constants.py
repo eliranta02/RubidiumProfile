@@ -43,7 +43,7 @@ elif D_line == 'D1':
     #excited state angular momentum
     L = 1
     wavelen = 795e-9
-    gamma = 6  # [MHz]
+    gamma = 2 * pi * 5.75e6  # [MHz]
     je = L - S
 
 k_num = 2 * pi / wavelen

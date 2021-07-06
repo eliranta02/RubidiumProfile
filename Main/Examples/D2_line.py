@@ -119,12 +119,12 @@ def repopulation_decay_matrix_vee(gamma_val):
 
 
 def callback(param):
-    k_probe = 780e-9
+    k_probe = 2 * pi /(780e-9)
     (del_val, velocity) = param
-    omega_pr = 2 * pi * 10e5
-    gamma_val = 2 * pi *6.06
-    delta_pr = del_val-k_probe * velocity
-    ret_val = buildRhoMatrix(H(delta_pr, omega_pr),N) + buildGammaMatrix(decay_martrix(gamma_val), N)
+    omega_pr = 2 * pi * 0.5e5
+    gamma_val = 2 * pi * 6.06e6
+    delta_pr = del_val
+    ret_val = buildRhoMatrix(H(delta_pr - k_probe * velocity, omega_pr),N) + buildGammaMatrix(decay_martrix(gamma_val), N)
     ret_val += repopulation_decay_matrix_vee(gamma_val)
 
     return ret_val
@@ -154,16 +154,19 @@ if __name__ == "__main__":
 
     returnDic = [rho13, rho14, rho15, rho24, rho25, rho26]
 
-    running_param = linspace(-2 * pi * 0.1e9, 2 * pi * 0.1e9, 500)  # (frequency scaning) detuning array
-    v_param = linspace(-600, 600, 500)  # atomic velocities array
-    time_val = 0.1
+    running_param = linspace(-2 * pi * 4e9, 2 * pi * 4e9, 500) # (frequency scaning) detuning array
+    v_param = linspace(-600, 600, 200)  # atomic velocities array
+    time_val = 1
     Tc = 25
-    results = lmes.solve_master_equation_with_Doppler_effect(callback, running_param, v_param, y0, time_val,
-                                                             Tc, returnDic)
-    solution13 = [res.imag for res in results[rho13]]
-    solution14 = [res.imag for res in results[rho14]]
-    solution15 = [res.imag for res in results[rho15]]
-    soluation = solution13 + solution14 + solution15
-    plt.plot(running_param, soluation)
+    results = lmes.solve_master_equation_with_Doppler_effect(callback, running_param,v_param, y0, time_val, Tc, returnDic)
+
+
+    absor = []
+
+    for idx, _ in enumerate(running_param):
+        absor.append(results[rho13][idx].imag + results[rho14][idx].imag + results[rho15][idx].imag + results[rho24][idx].imag + results[rho25][idx].imag + \
+                       results[rho26][idx].imag)
+
+    plt.plot(running_param / (2 * pi), absor)
     plt.show()
 

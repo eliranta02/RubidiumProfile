@@ -41,6 +41,37 @@ def H(delta, Delta_1, Delta_2, omega_c, omega_p, omega_1, omega_2):
 
     H0 = (delta) * rho22 + (Delta_1) * rho33 + (Delta_2) * rho44
 
-    V = (omega_1)  * rho13 + (omega_c) * rho14 + (omega_p) * rho23 + (omega_2)  * rho24
+    V = (omega_1)  * rho13 + (omega_c) * rho14 + (omega_p) * rho23 + (omega_2) * rho24
     V += transpose(V)
     return H0 + V
+
+def decay_martrix(gamma1, gamma2):
+
+    a1, a2, a3, a4 = states
+
+    rho33 = a3 * a3
+    rho44 = a4 * a4
+
+    L = gamma1 * rho33 + gamma2 * rho44
+
+    return L
+
+def repopulation_decay_matrix(gamma1, gamma2):
+    a1, a2, a3, a4 = states
+    rho11 = a1 * a1
+    rho22 = a2 * a2
+    rho33 = a3 * a3
+    rho44 = a4 * a4
+    ret_val = gamma1 * outer(rho11, rho33) + gamma1 * outer(rho22, rho44) + \
+              gamma2 * outer(rho22, rho33) + gamma2 * outer(rho22, rho44)
+    return ret_val
+
+#--------------------------------------------------------------------------------------------------------#
+
+def callback(param):
+    omegaProbe = 2 * pi * 0.5e5
+    (del_val, velocity) = param
+    gamma = 2 * pi * 5.75e6
+    k_wave = 2 * pi / 795e-9
+    ret_val = buildRhoMatrix(H(del_val-k_wave * velocity, omegaProbe), N) + buildGammaMatrix(decay_martrix(gamma), N)
+    return ret_val
