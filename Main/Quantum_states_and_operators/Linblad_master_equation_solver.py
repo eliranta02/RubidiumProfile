@@ -1,7 +1,7 @@
 from __future__ import division, print_function
 
 from numpy import zeros, transpose, kron, sqrt, dot, array, linspace
-from numpy.linalg import solve, lstsq
+from numpy.linalg import solve, lstsq, pinv
 from pylab import eig,mat,inv,exp,diag
 from scipy.integrate import ode, simps
 
@@ -26,25 +26,19 @@ class Ode_time_dependent_solver(object):
                 ret_val[key] = solT[key].item()
         return time_arr, ret_val
 
-    def solveSteadyState(self,matrix):
-        '''
-        Returns
-        ------
-        the solution of steady state solution
-        '''
+    def solveSteadyState(self, N, matrix):
+        vec = zeros((N * N,))
+        for i in range(N):
+            psi = zeros((N,))
+            psi[i] = 1.0
+            vec += transpose(np.kron(psi, psi))
 
-        N = len(matrix[0])
-        vec = zeros((N, ))
-        for i in range(int(sqrt(N))):
-            psi = zeros((int(sqrt(N)), ))
-            psi[i] = 1
-            vec += transpose(kron(psi, psi))
-        matrix[0] = vec
-        res = zeros((N,))
-        res[0] = 1
-        A = lstsq(matrix, res)
-        #TODO still needed to check
-        return A
+        matrix[- 1, :] = vec
+        inverse_matrix = pinv(matrix)
+        equality = zeros((N * N, ))
+        equality[-1] = 1.0
+        ret_val = dot(inverse_matrix, equality)
+        return ret_val
 
     def timeDependentSolverWithParam(self,jac, userSupply, param):
         # initate state
