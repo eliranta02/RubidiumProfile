@@ -31,7 +31,7 @@ class Ode_time_dependent_solver(object):
         for i in range(N):
             psi = zeros((N,))
             psi[i] = 1.0
-            vec += transpose(np.kron(psi, psi))
+            vec += transpose(kron(psi, psi))
 
         matrix[- 1, :] = vec
         inverse_matrix = pinv(matrix)
