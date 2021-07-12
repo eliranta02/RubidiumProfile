@@ -17,9 +17,9 @@ def init_states():
 
 
 def H(delta,omega):
-    global states
-    if states == None:
-        states = init_states()
+    #global states
+    #if states == None:
+    #    states = init_states()
 
     a1, a2 = states
 
@@ -30,9 +30,9 @@ def H(delta,omega):
     return H
 
 def decay_martrix(gamma):
-    global states
-    if states == None:
-        states = init_states()
+    #global states
+    #if states == None:
+    #    states = init_states()
 
     a1, a2 = states
     rho22 = a2 * a2
@@ -43,11 +43,21 @@ def decay_martrix(gamma):
 def callback(param):
     omegaProbe = 2 * pi * 0.5e5
     (del_val, velocity) = param
-    ret_val = buildRhoMatrix(H(del_val-k_wave * velocity, omegaProbe), N) + buildGammaMatrix(decay_martrix(gamma), N)
+
+    global states
+    if states == None:
+        states = init_states()
+
+    a1, a2 = states
+    rho11 = a1*a1
+    rho22 = a2*a2
+
+    ret_val = buildRhoMatrix(H(del_val-k_wave * velocity, omegaProbe), N) + buildGammaMatrix(decay_martrix(gamma), N) + gamma * outer(rho11 ,rho22)
     return ret_val
 
 if __name__ == "__main__":
     states_name = qunatum_states_dictionary.rhoMatrixNames(N)
+
     rho11 = states_name.getLocationByName('rho11')
     rho12 = states_name.getLocationByName('rho12')
     rho22 = states_name.getLocationByName('rho22')
@@ -55,19 +65,20 @@ if __name__ == "__main__":
     y0 = zeros((N * N, 1))
     y0[rho11] = 1
 
-
     lmes = Linblad_master_equation_solver(False)
 
     returnDic = [rho12, rho22]
 
-    running_param = linspace(-2 * pi * 2e9, 2 * pi * 2e9, 300) #(frequency scaning) detuning array
+    running_param = linspace(-2 * pi * 1e9, 2 * pi * 1e9, 100) #(frequency scaning) detuning array
     v_param = linspace(-600, 600, 500) #atomic velocities array
     time_val = 0.1
     k_wave = k_num
     Tc = 50
-    results = lmes.solve_master_equation_with_Doppler_effect(callback, running_param, v_param, y0, time_val, Tc, returnDic)
+    #results = lmes.solve_master_equation_with_Doppler_effect(callback, running_param, v_param, y0, time_val, Tc, returnDic)
+    #results = lmes.solve_master_equation_steady_state_without_Doppler_effect(callback, running_param, N, returnDic)
+    results = lmes.solve_master_equation_steady_state_with_Doppler_effect(callback, running_param, v_param, N, Tc, returnDic)
 
     solution = [res.real for res in results[rho22]]
-    plt.plot(running_param, solution)
+    plt.plot(running_param/(2 * pi), solution)
     plt.show()
 

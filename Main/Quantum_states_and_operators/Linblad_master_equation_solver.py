@@ -26,7 +26,7 @@ class Ode_time_dependent_solver(object):
                 ret_val[key] = solT[key].item()
         return time_arr, ret_val
 
-    def solveSteadyState(self, N, matrix):
+    def solveSteadyState(self, matrix, N, keys):
         vec = zeros((N * N,))
         for i in range(N):
             psi = zeros((N,))
@@ -37,8 +37,13 @@ class Ode_time_dependent_solver(object):
         inverse_matrix = pinv(matrix)
         equality = zeros((N * N, ))
         equality[-1] = 1.0
-        ret_val = dot(inverse_matrix, equality)
-        return ret_val
+        solT = dot(inverse_matrix, equality)
+
+        retval = {}
+        for key in keys:
+            retval[key] = solT[key]
+
+        return retval
 
     def timeDependentSolverWithParam(self,jac, userSupply, param):
         # initate state
@@ -69,7 +74,6 @@ class Ode_time_dependent_solver(object):
     def odeSolver(self,matrix,y0,time_val,keys):
 
         '''
-
         Parameters
         ----------
         y0 : y0 = zeros((N,1)) ; y0[1] = 1
@@ -172,6 +176,55 @@ class Linblad_master_equation_solver(Ode_time_dependent_solver):
                     temp_list = list(results)
             else:
                 results = map(functools.partial(self.odeSolver, y0=y0, time_val=time_val, keys = keys), mat_solver)
+                temp_list = list(results)
+
+            vell = {}
+            for key in keys:
+                rho = [item[key] for item in temp_list]
+                vell[key] = [a * b for a, b in zip(rho, velocity_dist)]
+
+            for key in keys:
+                ret_val[key].append(simps(vell[key],velocity_param))
+
+        return ret_val
+
+    def solve_master_equation_steady_state_without_Doppler_effect(self, callback, detuning_param, N, keys):
+        ret_val = {}
+        for key in keys:
+            ret_val[key] = []
+
+        mat_solver = [callback((param, 0)) for param in detuning_param]
+
+        if self.is_multi_processing_enabled == True:
+            with concurrent.futures.ProcessPoolExecutor() as executor:
+                results = executor.map(functools.partial(self.solveSteadyState, N = N, keys = keys), mat_solver)
+                temp_list = list(results)
+        else:
+            results = map(functools.partial(self.solveSteadyState, N = N, keys = keys), mat_solver)
+            temp_list = list(results)
+
+        for key in keys:
+            ret_val[key] = [item[key] for item in temp_list]
+
+        return ret_val
+
+    def solve_master_equation_steady_state_with_Doppler_effect(self, callback, detuning_param, velocity_param, N, Tc, keys):
+        ret_val = {}
+        for key in keys:
+            ret_val[key] = []
+
+        velocity_dist = [maxwell(param, temp2velocity(celsius2kelvin(Tc))) for param in velocity_param]
+
+        for del_val in tqdm(detuning_param):
+            #mat_solver = [callback(param) for param in (del_val-k_wave * velocity_param)]
+            mat_solver = [callback((del_val, velocity)) for velocity in velocity_param]
+            if self.is_multi_processing_enabled == True:
+                with concurrent.futures.ProcessPoolExecutor() as executor:
+                    results = executor.map(functools.partial(self.solveSteadyState, N = N, keys = keys), mat_solver)
+                    temp_list = list(results)
+            else:
+
+                results = map(functools.partial(self.solveSteadyState, N = N, keys = keys), mat_solver)
                 temp_list = list(results)
 
             vell = {}
