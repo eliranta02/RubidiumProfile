@@ -160,8 +160,8 @@ def repopulation_decay_matrix_Ladder(gamma2, gamma3):
 def callback(param):
     k_pump = 2 * pi / (795e-9)
     k_probe = 2 * pi / (780e-9)
-    omegaProbe = 2 * pi * 0.1e5
-    omegaPump = 2 * pi * 15e6
+    omegaProbe = 2 * pi * 1e6
+    omegaPump = 2 * pi * 20e6
     delta_pu = 0
     (del_val, velocity) = param
 
@@ -173,7 +173,7 @@ def callback(param):
 
     if DIAGRAM_LEVEL_TYPE == LAMBDA_TYPE:
         gamma3 = 2 * pi * 6.06e6
-        ret_val = buildRhoMatrix(H_Lambda(del_val-k_probe * velocity, delta_pu + k_probe * velocity, omegaProbe, omegaPump), N) + buildGammaMatrix(
+        ret_val = buildRhoMatrix(H_Lambda(del_val-k_probe * velocity, delta_pu - k_probe * velocity, omegaProbe, omegaPump), N) + buildGammaMatrix(
             decay_martrix_Lambda(gamma3), N) + repopulation_decay_matrix_Lambda(gamma3)
 
     if DIAGRAM_LEVEL_TYPE == LADDER_TYPE:
@@ -206,7 +206,7 @@ if __name__ == "__main__":
 
         returnDic = [rho12, rho22]
 
-        running_param = linspace(-2 * pi * 1e9, 2 * pi * 1e9, 2000)  # (frequency scaning) detuning array
+        running_param = linspace(-2 * pi * 0.2e9, 2 * pi * 0.2e9, 2000)  # (frequency scaning) detuning array
         v_param = linspace(-800, 800, 600)  # atomic velocities array
         time_val = 1
         Tc = 50
