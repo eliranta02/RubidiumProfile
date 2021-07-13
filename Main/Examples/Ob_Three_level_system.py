@@ -27,7 +27,7 @@ def init():
     states = init_states()
     N = 3
     return 1
-#-----------------------------------------------------------------------#
+#----------------------VEE TYPE EIT -------------------------------------------------#
 
 def H_vee(delta_pr, delta_pu, omega_pr, omega_pu):
     '''
@@ -74,7 +74,7 @@ def repopulation_decay_matrix_vee(gamma2, gamma3):
     ret_val = gamma3 * outer(rho11, rho33) + gamma2 * outer(rho11, rho22)
     return ret_val
 
-#-----------------------------------------------------------------------#
+#-----------------------------LAMBDA TYPE EIT --------------------------------------#
 def H_Lambda(delta_pr, delta_pu, omega_pr, omega_pu):
     '''
                    |3> -----
@@ -173,7 +173,7 @@ def callback(param):
 
     if DIAGRAM_LEVEL_TYPE == LAMBDA_TYPE:
         gamma3 = 2 * pi * 6.06e6
-        ret_val = buildRhoMatrix(H_Lambda(del_val-k_probe * velocity, delta_pu + k_pump * velocity, omegaProbe, omegaPump), N) + buildGammaMatrix(
+        ret_val = buildRhoMatrix(H_Lambda(del_val-k_probe * velocity, delta_pu + k_probe * velocity, omegaProbe, omegaPump), N) + buildGammaMatrix(
             decay_martrix_Lambda(gamma3), N) + repopulation_decay_matrix_Lambda(gamma3)
 
     if DIAGRAM_LEVEL_TYPE == LADDER_TYPE:
@@ -231,7 +231,7 @@ if __name__ == "__main__":
 
         returnDic = [rho13, rho22]
 
-        running_param = linspace(-2 * pi * 1e9, 2 * pi * 1e9, 500)  # (frequency scaning) detuning array
+        running_param = linspace(-2 * pi * 1e9, 2 * pi * 1e9, 1000)  # (frequency scaning) detuning array
         v_param = linspace(-800, 800, 600)  # atomic velocities array
         time_val = 1
         Tc = 50
