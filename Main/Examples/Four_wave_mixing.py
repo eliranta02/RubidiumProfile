@@ -13,8 +13,8 @@ N = 4
 def init_states():
     state1 = q_state.State(N,0,2, is_Ground = True)
     state2 = q_state.State(N,1,3, is_Ground = True)
-    state3 = q_state.State(N,2,1)
-    state4 = q_state.State(N,3,2)
+    state3 = q_state.State(N,2,2)
+    state4 = q_state.State(N,3,3)
     return state1, state2, state3, state4
 
 def init():
@@ -26,7 +26,7 @@ def init():
 
 def H(delta, Delta_1, Delta_2, omega_c, omega_p, omega_1, omega_2):
     global states
-    a1, a2, a3, a4, a5, a6 = states
+    a1, a2, a3, a4 = states
 
     rho11 = a1 * a1
     rho22 = a2 * a2
@@ -36,8 +36,9 @@ def H(delta, Delta_1, Delta_2, omega_c, omega_p, omega_1, omega_2):
     rho13 = a1 * a3
     rho14 = a1 * a4
 
-    rho23 = a2 * a4
-    rho24 = a2 * a5
+    rho23 = a2 * a3
+    rho24 = a2 * a4
+
 
     H0 = (delta) * rho22 + (Delta_1) * rho33 + (Delta_2) * rho44
 
@@ -62,16 +63,25 @@ def repopulation_decay_matrix(gamma1, gamma2):
     rho22 = a2 * a2
     rho33 = a3 * a3
     rho44 = a4 * a4
-    ret_val = gamma1 * outer(rho11, rho33) + gamma1 * outer(rho22, rho44) + \
-              gamma2 * outer(rho22, rho33) + gamma2 * outer(rho22, rho44)
+    ret_val = 0.5 * gamma1 * outer(rho11, rho33) + 0.5 * gamma1 * outer(rho22, rho44) + \
+              0.5 * gamma2 * outer(rho22, rho33) + 0.5 * gamma2 * outer(rho22, rho44)
     return ret_val
 
 #--------------------------------------------------------------------------------------------------------#
 
 def callback(param):
-    omegaProbe = 2 * pi * 0.5e5
-    (del_val, velocity) = param
-    gamma = 2 * pi * 5.75e6
-    k_wave = 2 * pi / 795e-9
-    ret_val = buildRhoMatrix(H(del_val-k_wave * velocity, omegaProbe), N) + buildGammaMatrix(decay_martrix(gamma), N)
+    ret_val  = 1
     return ret_val
+
+
+if __name__ == "__main__":
+    init()
+    delta = 1
+    Delta_1 = 1
+    Delta_2 = 1
+    omega_c = 1
+    omega_c = 1
+    omega_1 = 1
+    omega_2 = 1
+    a = H(delta, Delta_1, Delta_2, omega_c, omega_c, omega_1, omega_2)
+    print(a)
