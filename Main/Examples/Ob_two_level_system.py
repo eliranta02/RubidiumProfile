@@ -5,7 +5,8 @@ from Main.Quantum_states_and_operators.Linblad_master_equation_solver import  *
 
 from Main.Constants.Rb_constants import *
 
-import pylab as plt
+from Main.Tools.PlottingTemplate import *
+
 
 states = None
 N = 2
@@ -78,15 +79,36 @@ def time_dependent_TLS():
 
     returnDic = [rho12_num, rho22_num,rho11_num]
 
-    time_arr = linspace(0,1e-6,1000)
+    time_arr = linspace(0,0.2e-6,1000)
     omegaProbe = 2 * pi * 50e6
-    matrix_val = buildRhoMatrix(H(0, omegaProbe), N) + buildGammaMatrix(decay_martrix(gamma), N) + gamma * outer(rho11 ,rho22)
+    g = gamma + 2 * pi * 10e6
+    matrix_val = buildRhoMatrix(H(0, omegaProbe), N) + buildGammaMatrix(decay_martrix(g), N) + g * outer(rho11 ,rho22)
+
+    ret_val = lmes.solve_density_matrix_evolution(matrix_val, y0, time_arr, returnDic)
+    solution = [res.imag for res in ret_val[rho12_num]]
+    solution1 = [res.real for res in ret_val[rho22_num]]
+    #plt.plot(time_arr, solution)
+    plt.figure(1,figsize=(10, 8))
+    plt.subplot(121)
+    plt.plot(time_arr*200e6, solution1,lw=2,color=d_red)
+    plt.xlim([0,35])
+    plt.xlabel('L ($\mu m$)')
+    plt.ylabel(r'Population ($\rho_{22}$)')
+    plt.subplot(122)
+    plt.plot(time_arr * 200e6, solution, lw=2, color=d_blue)
+    plt.xlim([0, 35])
+    plt.xlabel('L ($\mu m$)')
+    plt.ylabel(r'Population ($\rho_{12}$)')
+
+    g = gamma
+    matrix_val = buildRhoMatrix(H(0, omegaProbe), N) + buildGammaMatrix(decay_martrix(g), N) + g * outer(rho11, rho22)
 
     ret_val = lmes.solve_density_matrix_evolution(matrix_val, y0, time_arr, returnDic)
     solution = [res.real for res in ret_val[rho11_num]]
     solution1 = [res.real for res in ret_val[rho22_num]]
-    plt.plot(time_arr, solution)
-    plt.plot(time_arr, solution1)
+    #plt.plot(time_arr, solution)
+    #plt.plot(time_arr*1e5, solution1,color=d_blue,lw=2)
+    plt.savefig('TLS.png')
     plt.show()
 
 def run():
@@ -103,7 +125,7 @@ def run():
 
     returnDic = [rho12, rho22]
 
-    running_param = linspace(-2 * pi * 1e9, 2 * pi * 1e9, 100) #(frequency scaning) detuning array
+    running_param = linspace(-2 * pi * 2.5e9, 2 * pi * 2.5e9, 3000) #(frequency scaning) detuning array
     v_param = linspace(-600, 600, 500) #atomic velocities array
     time_val = 0.1
     k_wave = k_num
@@ -111,11 +133,20 @@ def run():
     #results = lmes.solve_master_equation_with_Doppler_effect(callback, running_param, v_param, y0, time_val, Tc, returnDic)
     #results = lmes.solve_master_equation_steady_state_without_Doppler_effect(callback, running_param, N, returnDic)
     results = lmes.solve_master_equation_steady_state_with_Doppler_effect(callback, running_param, v_param, N, Tc, returnDic)
+    plt.figure(1,figsize=(5,4))
+    solution = [res.real for res in results[rho12]]
+    plt.plot(running_param/(2 * pi*1e9), solution,color=d_blue,lw=2,label=r'$\chi_R$')
 
-    solution = [res.real for res in results[rho22]]
-    plt.plot(running_param/(2 * pi), solution)
+    solution = [res.imag for res in results[rho12]]
+    plt.plot(running_param / (2 * pi*1e9), solution,color=d_red,lw=2,label=r'$\chi_I$')
+
+    plt.xlabel('Detunning (GHz)')
+    plt.yticks([])
+    plt.legend(loc=0)
+    plt.tight_layout()
+    plt.savefig('abs.png')
     plt.show()
 
 if __name__ == "__main__":
-    time_dependent_TLS()
+    run()
 
