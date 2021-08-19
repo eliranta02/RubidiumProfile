@@ -51,11 +51,45 @@ def callback(param):
     a1, a2 = states
     rho11 = a1*a1
     rho22 = a2*a2
-
+    k_wave = k_num
     ret_val = buildRhoMatrix(H(del_val-k_wave * velocity, omegaProbe), N) + buildGammaMatrix(decay_martrix(gamma), N) + gamma * outer(rho11 ,rho22)
     return ret_val
 
-if __name__ == "__main__":
+def time_dependent_TLS():
+
+    global states
+    if states == None:
+        states = init_states()
+
+    lmes = Linblad_master_equation_solver(False)
+
+    states_name = qunatum_states_dictionary.rhoMatrixNames(N)
+
+    rho11_num = states_name.getLocationByName('rho11')
+    rho12_num = states_name.getLocationByName('rho12')
+    rho22_num = states_name.getLocationByName('rho22')
+
+    y0 = zeros((N * N, 1))
+    y0[rho11_num] = 1
+
+    a1, a2 = states
+    rho11 = a1 * a1
+    rho22 = a2 * a2
+
+    returnDic = [rho12_num, rho22_num,rho11_num]
+
+    time_arr = linspace(0,1e-6,1000)
+    omegaProbe = 2 * pi * 50e6
+    matrix_val = buildRhoMatrix(H(0, omegaProbe), N) + buildGammaMatrix(decay_martrix(gamma), N) + gamma * outer(rho11 ,rho22)
+
+    ret_val = lmes.solve_density_matrix_evolution(matrix_val, y0, time_arr, returnDic)
+    solution = [res.real for res in ret_val[rho11_num]]
+    solution1 = [res.real for res in ret_val[rho22_num]]
+    plt.plot(time_arr, solution)
+    plt.plot(time_arr, solution1)
+    plt.show()
+
+def run():
     states_name = qunatum_states_dictionary.rhoMatrixNames(N)
 
     rho11 = states_name.getLocationByName('rho11')
@@ -81,4 +115,7 @@ if __name__ == "__main__":
     solution = [res.real for res in results[rho22]]
     plt.plot(running_param/(2 * pi), solution)
     plt.show()
+
+if __name__ == "__main__":
+    time_dependent_TLS()
 

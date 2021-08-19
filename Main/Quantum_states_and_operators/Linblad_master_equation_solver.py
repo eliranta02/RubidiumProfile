@@ -17,14 +17,15 @@ from tqdm import tqdm
 
 class Ode_time_dependent_solver(object):
 
-    def timeDependentSolver(self,matrix,y0,time_arr,keys):
-        for time_val in time_arr:
-            eval, evec = eig(matrix)
-            solT = evec * mat(diag(exp(eval * time_val))) * inv(evec) * y0
-            ret_val = {}
-            for key in keys:
-                ret_val[key] = solT[key].item()
-        return time_arr, ret_val
+    def timeDependentSolver(self,matrix_val,y0,time_val,keys):
+
+        eval, evec = eig(matrix_val)
+        solT = evec * mat(diag(exp(eval * time_val))) * inv(evec) * y0
+        ret_val = {}
+        for key in keys:
+            ret_val[key] = solT[key].item()
+
+        return ret_val
 
     def solveSteadyState(self, matrix, N, keys):
         vec = zeros((N * N,))
@@ -237,6 +238,23 @@ class Linblad_master_equation_solver(Ode_time_dependent_solver):
 
         return ret_val
 
+    def solve_density_matrix_evolution(self, matrix_val, y0, time_arr, keys):
+        '''
+        :param callback:
+        :param detuning_param:
+        :param y0: initial vector  y0 = zeros((N,)) ; y0[1] = 1
+        :param returnDic:
+        :return:
+        '''
+        ret_val = {}
+        for key in keys:
+            ret_val[key] = []
+
+        for time_val in time_arr:
+            result = self.timeDependentSolver(matrix_val,y0,time_val,keys)
+            for key in keys:
+                ret_val[key].append(result[key])
+        return ret_val
 '''
 def jac(t,y,param):
     delta = param[0] * t
